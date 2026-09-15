@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PACU 恢復室藥物與劑量學習網頁</title>
+
+<style>
+:root {
+  --brand-primary: #1c84c6;
+  --brand-deep: #2f4050;
+  --brand-accent: #2f54eb;
+  --bg-page: #f4f6f9;
+  --bg-card: #ffffff;
+  --text-dark: #1f2d3a;
+  --text-muted: #52606d;
+  --line-border: #d8e0e8;
+  --risk-high: #ff4d4f;
+  --risk-medium: #faad14;
+  --success-color: #52c41a;
+}
+
+*{box-sizing:border-box;}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* Header & Main Nav */
+.top-header {
+  background: linear-gradient(135deg, #1c84c6 0%, #2f4050 100%);
+  color: white;
+  padding: 16px 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.header-title-box h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.header-title-box p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.main-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.nav-tab {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-tab:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.nav-tab.active {
+  background: white;
+  color: var(--brand-deep);
+  border-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.main-content {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.view-panel {
+  display: none;
+}
+.view-panel.active {
+  display: block;
+}
+
+/* Common Card & Button Styles */
+.card {
+  background: var(--bg-card);
+  padding: 18px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid var(--line-border);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 14px;
+  border-left: 4px solid var(--brand-primary);
+  padding-left: 10px;
+  color: var(--brand-deep);
+}
+
+/* Toolbox View Styles */
+.search-bar {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line-border);
+  font-size: 15px;
+  outline: none;
+}
+.search-bar:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(28, 132, 198, 0.15);
+}
+
+.filter-group {
+  margin-bottom: 10px;
+}
+.filter-group button {
+  margin: 3px 2px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 20px;
+  background: #e2e8f0;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s, color 0.2s;
+}
+.filter-group button.active {
+  background: var(--brand-primary);
+  color: white;
+}
+
+.drug-card {
+  border-left: 6px solid #cbd5e1;
+}
+.drug-card.risk-high { border-left-color: var(--risk-high); }
+.drug-card.risk-medium { border-left-color: var(--risk-medium); }
+
+.drug-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.drug-name {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.drug-name:hover {
+  background: var(--brand-primary);
+  color: white;
+}
+
+.tag {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.tag.risk-high { background: var(--risk-high); color: white; }
+.tag.risk-medium { background: var(--risk-medium); color: white; }
+
+.category-tag {
+  font-size: 12px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.lowdose-box {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.lowdose-box b { color: #389e0d; }
+.lowdose-na { color: #8c8c8c; font-style: italic; }
+
+.toggle-btn {
+  cursor: pointer;
+  color: var(--brand-primary);
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+}
+.toggle-btn:hover { text-decoration: underline; }
+.hidden { display: none !important; }
+
+.warning-text {
+  color: #d9363e;
+  background: #fff1f0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.dose-text { white-space: pre-line; }
+
+/* Dose Calc View Styles */
+.calc-container {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-weight: bold;
+  color: var(--text-dark);
+  font-size: 14px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line-border);
+  background: #fafcfe;
+  font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand-primary);
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(28,132,198,0.18);
+}
+
+.dose-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#doseUnit {
+  min-width: 60px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--brand-primary);
+  background: #f0f7fd;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1.5px solid #d7e9f6;
+}
+
+.btn-primary {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  background: linear-gradient(90deg, var(--brand-primary), #2596e6);
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.calc-result {
+  margin-top: 14px;
+  background: #e8f4ff;
+  padding: 16px;
+  font-size: 20px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #0b5394;
+  border-left: 5px solid var(--brand-primary);
+}
+
+.calc-warning {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #b71c1c;
+  font-weight: bold;
+  text-align: center;
+  border: 1.5px solid #f5b8b1;
+}
+
+.calc-hint {
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 3px solid #e6900c;
+  background: repeating-linear-gradient(135deg, #fff3cd, #fff3cd 10px, #ffe8a3 10px, #ffe8a3 20px);
+  line-height: 1.7;
+  color: #7a4a00;
+  font-size: 15px;
+  font-weight: bold;
+  animation: hint-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%,100%{ box-shadow: 0 0 0 3px rgba(230,144,12,0.18); }
+  50%{ box-shadow: 0 0 0 6px rgba(230,144,12,0.32); }
+}
+
+.detail-box {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f6f8fb;
+  border: 1px solid var(--line-border);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.detail-box .title {
+  font-weight: bold;
+  color: #0b5394;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.toggle-detail-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: bold;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid var(--line-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Admin Styles */
+.admin-login-box {
+  max-width: 400px;
+  margin: 40px auto;
+  background: white;
+  padding: 32px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.admin-login-box h3 { margin: 0 0 8px; color: var(--brand-deep); }
+.admin-login-box input { text-align: center; letter-spacing: 4px; font-size: 18px; margin: 14px 0; }
+
+.admin-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.admin-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-btn.primary { background: var(--brand-accent); color: white; }
+.admin-btn.success { background: var(--success-color); color: white; }
+.admin-btn.danger { background: var(--risk-high); color: white; }
+.admin-btn.warn { background: var(--risk-medium); color: black; }
+.admin-btn.ghost { background: #e2e8f0; color: #334155; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.admin-table th { background: #f0f5ff; padding: 10px; text-align: left; font-size: 13px; color: var(--brand-accent); }
+.admin-table td { padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: top; }
+.admin-table-wrap { overflow-x: auto; }
+
+.act-btn { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin: 2px; }
+.act-btn.edit { background: #e6f7ff; color: #1890ff; }
+.act-btn.del { background: #fff1f0; color: #ff4d4f; }
+
+/* Modals & Toast */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: white; border-radius: 14px; padding: 24px; width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.modal h3 { margin: 0 0 16px; color: var(--brand-deep); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-actions button { padding: 9px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.modal-actions .save { background: var(--brand-primary); color: white; }
+.modal-actions .cancel { background: #f0f0f0; color: #333; }
+
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background: #333; color: white; padding: 10px 24px; border-radius: 10px;
+  font-size: 14px; z-index: 2000; opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid .full { grid-column: 1/-1; }
+
+option.ctrl { background-color: #fdecea; color: #c62828; font-weight: bold; }
+optgroup { font-style: normal; font-weight: bold; color: var(--text-muted); font-size: 13px; }
+
+.note-box {
+  margin-top: 14px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #3f4a55;
+  line-height: 1.5;
+  background: #f4f7fa;
+  border-radius: 8px;
+  border: 1px solid var(--line-border);
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== Top Header ===== -->
+<div class="top-header">
+  <div class="header-title-box">
+    <h1>🏥 PACU 恢復室藥物與劑量學習網頁</h1>
+    <p>中國附醫 ｜ 恢復室 PACU 藥物查詢 & 換算雙功能整合系統</p>
+  </div>
+  <div class="main-nav">
+    <button class="nav-tab active" id="navToolboxFront" onclick="switchNav('toolboxFront')">📋 藥物查詢</button>
+    <button class="nav-tab" id="navCalcFront" onclick="switchNav('calcFront')">🧮 劑量換算</button>
+    <button class="nav-tab" id="navToolboxAdmin" onclick="switchNav('toolboxAdmin')">⚙ 藥物查詢後台</button>
+    <button class="nav-tab" id="navCalcAdmin" onclick="switchNav('calcAdmin')">⚙ 劑量換算後台</button>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <!-- ==================== VIEW 1: TOOLBOX FRONT ==================== -->
+  <div id="viewToolboxFront" class="view-panel active">
+    <input id="searchToolbox" class="search-bar" placeholder="🔍 搜尋藥名 / 適應症 / 副作用...">
+
+    <div class="filter-group" id="catFilter">
+      <button onclick="setCategory('全部');highlightFilter(this)">全部</button>
+      <button onclick="setCategory('止痛藥物');highlightFilter(this)">止痛藥物</button>
+      <button onclick="setCategory('鎮靜藥物');highlightFilter(this)">鎮靜藥物</button>
+      <button onclick="setCategory('急救藥物');highlightFilter(this)">急救藥物</button>
+      <button onclick="setCategory('心血管藥物');highlightFilter(this)">心血管藥物</button>
+      <button onclick="setCategory('呼吸道藥物');highlightFilter(this)">呼吸道藥物</button>
+      <button onclick="setCategory('止吐藥物');highlightFilter(this)">止吐藥物</button>
+      <button onclick="setCategory('類固醇藥物');highlightFilter(this)">類固醇藥物</button>
+      <button onclick="setCategory('抗組織胺藥物');highlightFilter(this)">抗組織胺藥物</button>
+      <button onclick="setCategory('抗凝血藥物');highlightFilter(this)">抗凝血藥物</button>
+      <button onclick="setCategory('利尿劑');highlightFilter(this)">利尿劑</button>
+    </div>
+
+    <div class="filter-group" id="riskFilter">
+      <button onclick="setRisk('all');highlightFilter(this)">全部風險</button>
+      <button onclick="setRisk('high');highlightFilter(this)">🚨 高風險</button>
+      <button onclick="setRisk('medium');highlightFilter(this)">⚠ 注意</button>
+    </div>
+
+    <div id="drugListToolbox"></div>
+  </div>
+
+  <!-- ==================== VIEW 2: CALC FRONT ==================== -->
+  <div id="viewCalcFront" class="view-panel">
+    <div class="calc-container card">
+      <div class="section-title">💊 藥物劑量換算系統</div>
+
+      <label for="drugSelect">選擇藥物</label>
+      <select id="drugSelect" onchange="resetCalcForm()">
+        <option value="">-- 請選擇藥物 --</option>
+      </select>
+
+      <label for="doseInput">醫囑劑量</label>
+      <div class="dose-row">
+        <input id="doseInput" type="number" step="0.1" inputmode="decimal">
+        <span id="doseUnit"></span>
+      </div>
+
+      <div id="dilutionBlock" class="hidden">
+        <label for="dilutionSelect">稀釋方式</label>
+        <select id="dilutionSelect" onchange="doCalculate(true)">
+          <option value="10">NS 稀釋至 10 mL</option>
+          <option value="5">NS 稀釋至 5 mL</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="doCalculate()">計算</button>
+
+      <div id="resultLive" aria-live="assertive" aria-atomic="true"></div>
+
+      <button id="toggleDetailBtn" type="button" class="toggle-detail-btn hidden" onclick="toggleCalcDetail()">
+        📦 顯示藥物總量明細 ▼
+      </button>
+
+      <div id="calcDetail" class="detail-box hidden"></div>
+
+      <div class="note-box">
+        ⚑ 本工具僅提供<strong>數學換算</strong>(濃度/體積/包裝容量)，實際給藥與稀釋方式請依醫囑與科內規範確認。
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 3: TOOLBOX ADMIN ==================== -->
+  <div id="viewToolboxAdmin" class="view-panel">
+    <div id="tbAdminGate" class="admin-login-box card">
+      <h3>⚙ 藥物查詢後台</h3>
+      <p>請輸入後台維護密碼</p>
+      <input type="password" id="tbAdminPwd" maxlength="10" placeholder="••••">
+      <button class="btn-primary" onclick="doTbAdminLogin()">進入後台</button>
+      <div id="tbAdminErr" style="color:red;font-size:13px;margin-top:8px;"></div>
+    </div>
+
+    <div id="tbAdminContent" class="hidden">
+      <div class="admin-toolbar">
+        <button class="admin-btn primary" onclick="openAddModalTB()">＋ 新增藥物</button>
+        <button class="admin-btn success" onclick="exportBackupTB()">📥 備份 JSON</button>
+        <button class="admin-btn warn" onclick="document.getElementById('importFileTB').click()">📤 匯入備份</button>
+        <input type="file" id="importFileTB" accept=".json" class="hidden" onchange="importBackupTB(event)">
+        <button class="admin-btn danger" onclick="resetDefaultsTB()">🔄 重置預設</button>
+        <button class="admin-btn ghost" onclick="lockTbAdmin()" style="margin-left:auto;">🔒 鎖定後台</button>
+      </div>
+      <p style="color:#8c8c8c;font-size:13px;">共 <b id="tbAdminCount">0</b> 筆藥物資料</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>藥名</th>
+              <th>分類</th>
+              <th>風險</th>
+              <th>適應症</th>
+              <th>低劑量濃度</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbAdminBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW 4: CALC ADMIN ==================== -->
+  <div id="viewCalcAdmin" class="view-panel">
+    <div id="calcAdminGate" class="admin-login-box card">
+      <h3>⚙ 劑量換算後台</h3>
+      <p>請輸入後台維護密碼</p>
+      <input type="password" id="calcAdminPwd" inputmode="numeric" placeholder="••••">
+      <button class="btn-primary" onclick="doCalcAdminLogin()">進入後台</button>
+      <div id="calcAdminErr" style="color:red;font-size:13px;margin-top:8px;"></div>
+    </div>
+
+    <div id="calcAdminContent" class="hidden">
+      <div class="note-box" style="margin-bottom:14px;background:#fff8e1;border-color:#f0ad4e;color:#7a5400;">
+        💾 提醒：藥物資料儲存在「此瀏覽器/此裝置」本機。更換裝置或清除快取前，請善用「📥 備份 JSON」匯出功能。
+      </div>
+
+      <div class="admin-toolbar">
+        <button class="admin-btn primary" onclick="openDrugFormCalc()">＋ 新增換算藥物</button>
+        <button class="admin-btn success" onclick="doBackupCalc()">📥 備份 JSON</button>
+        <button class="admin-btn warn" onclick="document.getElementById('importFileCalc').click()">📤 匯入備份</button>
+        <input type="file" id="importFileCalc" accept="application/json" class="hidden" onchange="doImportCalc(event)">
+        <button class="admin-btn danger" onclick="doResetDefaultCalc()">↺ 重置預設</button>
+        <button class="admin-btn ghost" onclick="doRestoreBackupCalc()">↩ 復原上一次備份</button>
+        <button class="admin-btn ghost" onclick="lockCalcAdmin()" style="margin-left:auto;">🔒 鎖定後台</button>
+      </div>
+
+      <div id="calcAdminList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Modal 1: Toolbox Add/Edit ===== -->
+<div class="modal-overlay" id="tbModalOverlay">
+  <div class="modal">
+    <h3 id="tbModalTitle">新增藥物</h3>
+    <label>藥物名稱</label>
+    <input id="fName" placeholder="例：Morphine 10mg/1mL/Amp">
+
+    <label>分類</label>
+    <select id="fCategory">
+      <option>止痛藥物</option><option>鎮靜藥物</option><option>急救藥物</option>
+      <option>心血管藥物</option><option>呼吸道藥物</option><option>止吐藥物</option>
+      <option>類固醇藥物</option><option>抗組織胺藥物</option><option>抗凝血藥物</option>
+      <option>利尿劑</option>
+    </select>
+
+    <label>風險等級</label>
+    <select id="fRisk">
+      <option value="high">🚨 高風險</option>
+      <option value="medium">⚠ 注意</option>
+    </select>
+
+    <label>適應症</label>
+    <textarea id="fIndication" rows="2"></textarea>
+
+    <label>副作用（每行一項）</label>
+    <textarea id="fAdr" rows="3" placeholder="噁心&#10;嘔吐"></textarea>
+
+    <label>用藥方式</label>
+    <textarea id="fDose" rows="3"></textarea>
+
+    <label>注意事項（每行一項）</label>
+    <textarea id="fWarning" rows="3"></textarea>
+
+    <label>低劑量濃度（不稀釋）</label>
+    <input id="fLowDose" placeholder="例：1mg/0.1ml">
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeTbModal()">取消</button>
+      <button class="save" onclick="saveTbDrug()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal 2: Calc Add/Edit ===== -->
+<div class="modal-overlay" id="calcFormModal">
+  <div class="modal">
+    <h3 id="calcFormTitle">新增換算藥物</h3>
+    <label>藥品顯示文字</label>
+    <input id="calcFormLabel" placeholder="例：Fentanyl (100 mcg / 2 mL / amp)">
+
+    <div class="form-grid">
+      <div>
+        <label>計算類型</label>
+        <select id="calcFormType">
+          <option value="mg">mg (依濃度 mg/mL 換算)</option>
+          <option value="mcg">mcg (依濃度 mcg/mL 換算)</option>
+          <option value="IU">IU (依濃度 IU/mL 換算)</option>
+          <option value="amp">amp (依每支 mL 數換算)</option>
+          <option value="bot">bot (依每瓶 mL 數換算)</option>
+          <option value="tab">tab (依每顆含量換算)</option>
+        </select>
+      </div>
+      <div>
+        <label>低劑量提示分類</label>
+        <select id="calcFormSpecial">
+          <option value="">無</option>
+          <option value="fentanyl">fentanyl</option>
+          <option value="meperidine">meperidine</option>
+          <option value="morphine">morphine</option>
+          <option value="norepinephrine">norepinephrine</option>
+          <option value="propofol">propofol</option>
+        </select>
+      </div>
+
+      <div>
+        <label>濃度 / 每顆含量</label>
+        <input id="calcFormStrength" type="number" step="any">
+      </div>
+      <div>
+        <label>含量單位 (amountunit)</label>
+        <input id="calcFormAmountunit" placeholder="mg / mcg / IU / g">
+      </div>
+
+      <div>
+        <label>每支 mL 數 (ampml)</label>
+        <input id="calcFormAmpml" type="number" step="any">
+      </div>
+      <div>
+        <label>每瓶 mL 數 (botml)</label>
+        <input id="calcFormBotml" type="number" step="any">
+      </div>
+
+      <div>
+        <label>包裝總 mL (totalml)</label>
+        <input id="calcFormTotalml" type="number" step="any">
+      </div>
+      <div>
+        <label>包裝總含量 (totalamount)</label>
+        <input id="calcFormTotalamount" type="number" step="any">
+      </div>
+
+      <div>
+        <label>每瓶顆數 (packcount)</label>
+        <input id="calcFormPackcount" type="number" step="1">
+      </div>
+      <div></div>
+
+      <div>
+        <label>低劑量基準 (base)</label>
+        <input id="calcFormBase" type="number" step="any">
+      </div>
+      <div>
+        <label>低劑量觸發門檻 (lowth)</label>
+        <input id="calcFormLowth" type="number" step="any">
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+      <input id="calcFormCtrl" type="checkbox" style="width:auto;margin:0;">
+      <label for="calcFormCtrl" style="margin:0;">標示為管制藥（⚠ 紅色樣式）</label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeCalcFormModal()">取消</button>
+      <button class="save" onclick="saveCalcDrugForm()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 3: Confirm -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px;">
+    <h3 id="confirmModalTitle">請確認</h3>
+    <div id="confirmText" style="font-size:15px;line-height:1.6;margin-bottom:16px;"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="confirmNo()">取消</button>
+      <button class="save" id="confirmYesBtn" onclick="confirmYes()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notice -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   1. SHARED UTILITIES & TAB NAVIGATION
+   ========================================================= */
+function showToast(msg){
+  let t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2000);
+}
+
+function escapeHtml(str){
+  if(str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function switchNav(tabName){
+  const views = ['toolboxFront', 'calcFront', 'toolboxAdmin', 'calcAdmin'];
+  views.forEach(v => {
+    const navBtn = document.getElementById('nav' + v.charAt(0).toUpperCase() + v.slice(1));
+    const viewEl = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+    if(navBtn) navBtn.classList.toggle('active', v === tabName);
+    if(viewEl) viewEl.classList.toggle('active', v === tabName);
+  });
+
+  if(tabName === 'calcFront') renderCalcSelect();
+  if(tabName === 'toolboxAdmin' && tbAdminUnlocked) renderTbAdmin();
+  if(tabName === 'calcAdmin' && calcAdminUnlocked) renderCalcAdminList();
+}
+
+/* =========================================================
+   2. TOOLBOX MODULE (藥物查詢工具箱)
+   ========================================================= */
+const TB_STORAGE_KEY = "recoveryRoomDrugs";
+const ADMIN_PWD_HASH = "2926a2731f4b312c08982cacf8061eb14bf65c1a87cc5d70e864e079c6220731"; // sha256("8888")
+let tbAdminUnlocked = false;
+let tbFailCount = 0;
+let tbLockUntil = 0;
+
+const defaultTbDrugs = [
+  {category:"抗凝血藥物",name:"Heparin 25000IU/5ml/Vial",risk:"high",indication:"血栓性栓塞症及其預防,抗凝血或其它臨床用途",adr:["出血","過敏反應(冷顫、蕁麻疹、發燒、鼻炎、氣喘樣的反應)","急性可逆性血小板過少症"],dose:"靜脈注射,間歇性或持續性靜脈輸注或深層皮下注射。",warning:["本藥禁用於：血友病、胃腸道出血性潰瘍、代償失調引起的嚴重高血壓症、中樞神經系統外科手術上、疑似腦出血症、漸近性心內膜炎、甲狀腺手術、疑似惡性腫瘤而有出血危險者、對Heparin Sodium過敏者"],lowDoseConc:"500IU/0.1ml"},
+  {category:"止痛藥物",name:"Morphine 10mg/1mL/Amp",risk:"high",indication:"術後中重度疼痛",adr:["呼吸抑制"],dose:"靜脈注射每1~2小時 0.7~10mg",warning:["有依賴的可能性（戒斷症狀).","嗜眠、眩暈.","避免飲酒.","嚴重呼吸抑制、氣喘、肝病禁用"],lowDoseConc:"1mg/0.1ml"},
+  {category:"止痛藥物",name:"Fentanyl (0.05mg/mL) 2mL/Amp",risk:"high",indication:"麻醉用藥、急性疼痛之緊急治療",adr:["肌肉僵硬","縮瞳","心跳緩慢","低血壓","噁心","嘔吐","眩暈"],dose:"(請依藥袋指示服用)\n1.注射用藥。\n2.靜脈滴注可使用D5W或NS當溶液；Y-site旁插可使用Lactated Ringer, Hetastarch 6%。",warning:["本藥會排泄到人體乳汁中，因此投與本藥後的24小時內不建議授乳。"],lowDoseConc:"5mcg/0.1ml"},
+  {category:"止痛藥物",name:"Pethidine 50mg/1mL/Amp",risk:"high",indication:"鎮痛",adr:["畏光","眩暈","鎮靜","噁心","嘔吐","流汗"],dose:"1.不建議慢性疼痛\n2.不超過48小時或600mg/日",warning:["老年人減量","可能引發癲癇","避免開車","注意姿勢性低血壓"],lowDoseConc:"5mg/0.1ml"},
+  {category:"鎮靜藥物",name:"Propofol 200mg/20mL/Amp",risk:"high",indication:"麻醉劑,加護病房使用人工呼吸器之鎮靜,手術和侵襲性檢查鎮靜用",adr:["低血壓","噁心","嘔吐","頭痛","過敏"],dose:"1.靜脈注射。\n2.可混合之輸液或注射液：5% Glucose、0.9% NaCl。",warning:["注射後請勿開車或操作器械或在具有危險性的場合。","不可飲用酒精性飲料。","授乳的母親使用後應暫停授乳24小時。"],lowDoseConc:"10mg/1ml"},
+  {category:"急救藥物",name:"Epinephrine 1mg/1mL/Amp",risk:"high",indication:"過敏性休克、心跳停止、支氣管痙攣",adr:["心悸","高血壓","焦躁"],dose:"輸液: D5W, NS",warning:["可能引發心律不整","胸痛須立即評估","可能造成腸損傷使小腸發生阻塞，出血及穿孔"],lowDoseConc:"0.1mg/0.1ml"},
+  {category:"心血管藥物",name:"Dopamine 200mg/5mL/Amp",risk:"high",indication:"休克、低血壓、心輸出量不足",adr:["心律不整","高血壓","心悸","頭痛","噁心","周邊血管收縮"],dose:"1.靜脈輸注使用，需使用輸液幫浦控制速率。\n2.依血壓及尿量（腎灌流）調整劑量。",warning:["需使用輸液幫浦精確控制劑量。","外滲可能造成組織壞死，需確保靜脈路徑良好。","高劑量可能導致心律不整及過度血管收縮。","與MAO抑制劑併用時需特別小心（可能加強作用）。"],lowDoseConc:"40mg/1ml"},
+  {category:"心血管藥物",name:"Easydopa 400mg/250mL/Bot",risk:"high",indication:"低血壓、休克、心輸出量不足之血壓支持",adr:["心律不整","高血壓","心悸","頭痛","末梢循環不良","噁心"],dose:"1.靜脈輸注使用，需使用輸液幫浦控制速率。\n2.依血壓及臨床反應調整滴速。",warning:["需使用輸液幫浦精確控制輸注速率。","外滲可能造成局部組織壞死，需確認靜脈通路。","可能引起嚴重心律不整，需心電圖監測。","避免與MAO抑制劑併用（可能加強升壓作用）。"],lowDoseConc:"0.16mg/0.1ml"},
+  {category:"急救藥物",name:"Atropine 1mg/1mL/Amp",risk:"high",indication:"心搏過緩、迷走神經過度反應、有機磷中毒解毒",adr:["心跳過速","口乾","視力模糊","尿滯留","躁動"],dose:"1.靜脈注射。\n2.成人心搏過緩：每次0.5mg IV，可每3~5分鐘重複，最大3mg。",warning:["青光眼患者慎用","前列腺肥大可能造成尿滯留","過量可能導致譫妄或心律不整"],lowDoseConc:"0.1mg/0.1ml"},
+  {category:"急救藥物",name:"Adenosine 6mg/2ml/Vial",risk:"high",indication:"陣發性上室性心動過速（PSVT）之急性治療",adr:["短暫心跳停止","心悸","胸悶","呼吸急促","臉潮紅","頭暈"],dose:"1.快速靜脈推注（IV bolus），需經大靜脈給藥。\n2.給藥後立即以生理食鹽水快速沖洗（flush）。",warning:["可能引起短暫心搏停止或嚴重心律變化，需持續心電圖監測。","給藥必須快速（1–2秒內）推注。","氣喘或支氣管痙攣患者慎用（可能誘發支氣管收縮）。","與茶鹼、咖啡因等會降低效果，與Dipyridamole併用可能增強作用。"],lowDoseConc:"0.3mg/0.1ml"},
+  {category:"急救藥物",name:"Ephedrine 40mg/1mL/Amp",risk:"high",indication:"支氣管性氣喘、血管運動神經性鼻炎、過敏性鼻炎、脊椎麻醉導致之急性低血壓",adr:["頭暈","頭痛","焦慮","不規律或加速心跳","失眠","血壓上昇"],dose:"肌肉注射、皮下注射或靜脈注射使用。",warning:["長期使用可能會影響心臟功能","狹角青光眼禁用","服用MAO抑制劑的病人禁用","嚴重高血壓及冠狀動脈疾病禁用"],lowDoseConc:"4mg/0.1ml"},
+  {category:"急救藥物",name:"Norepinephrine 4mg/4mL/Amp",risk:"high",indication:"嚴重低血壓、休克（特別是敗血性休克）之血壓支持",adr:["高血壓","心律不整","頭痛","末梢循環不良","焦慮","外滲造成組織壞死"],dose:"1.靜脈輸注使用，需使用輸液幫浦控制速率。\n2.依血壓及臨床反應調整滴速。\n3.建議以D5W或D5NS稀釋，不建議單獨使用NS稀釋(葡萄糖成分有助於維持安定性)。",warning:["需使用輸液幫浦精確控制劑量。","外滲可能造成嚴重組織壞死，建議使用中央靜脈輸注。","需持續監測血壓與心電圖。","停藥需逐步減量，避免反彈性低血壓。"],lowDoseConc:"1mg/1ml"},
+  {category:"急救藥物",name:"Sodium Bicarbonate 20mL/Amp",risk:"high",indication:"代謝性酸中毒、心跳停止時矯正酸中毒、高血鉀緊急處理、藥物中毒（如TCA）",adr:["代謝性鹼中毒","低血鉀","鈉負荷過高","體液過多","局部刺激或外滲"],dose:"1.靜脈注射或輸注。\n2.需依血氣分析（ABG）調整劑量。",warning:["快速或過量給藥可能導致代謝性鹼中毒。","可能引起低血鉀，需監測電解質。","避免與鈣劑同時混合（會產生沉澱）。","心肺復甦（CPR）時僅在特定情況下使用（如高血鉀或已知酸中毒）。"],lowDoseConc:"未標示濃度,無法換算(請人工確認)"},
+  {category:"急救藥物",name:"Voluven 6% 500 mL/Bot",risk:"high",indication:"血容量不足（如失血或休克）之血容量擴充",adr:["過敏反應","凝血異常","腎功能損害","體液過多","搔癢"],dose:"1.靜脈輸注使用。\n2.依病人血流動力學狀況調整輸注速率與總量。",warning:["可能增加急性腎損傷風險，腎功能不全或重症患者避免使用。","可能影響凝血功能，出血或術後患者需謹慎使用。","有過敏性休克風險，輸注時需嚴密監測。","避免大量快速輸注，以免造成體液過多或肺水腫。"],lowDoseConc:"50ml/0.1bot"},
+  {category:"急救藥物",name:"Glucose 50% 20mL/Amp",risk:"medium",indication:"碳水化合物溶液，主要用作由口服無法獲得所需要之營養缺乏病人之卡路里(熱量)及液體來源。",adr:["惡寒顫慄","發燒"],dose:"1.皮下注射：將注射液注於大腿部皮下為佳。\n2.靜脈內注射：尤其是滲透療法及使用大量的糖分時以本法為方便。",warning:["對於重症糖尿病患者宜避免使用","高張液靜脈注射需緩慢施行","大量注射建議加溫後使用"],lowDoseConc:"2ml/0.1Amp"},
+  {category:"利尿劑",name:"Fursemide 20mg/2mL/Amp",risk:"medium",indication:"利尿、高血壓、急性肺水腫。",adr:["起立性低血壓(開始治療時)","嘔吐","頭痛","視力模糊","耳鳴","胃腸刺激","便秘","身體不適","白血球過少","貧血","蕁麻疹","對光敏感","多發性紅斑","剝落性皮膚炎","壞死性血管炎","虛弱","尿意頻繁","泌尿道膀胱痙攣","血栓靜脈炎"],dose:"1.輸注液可用生理食鹽水、乳酸林格氏液或5%葡萄糖液製備，必要時應調整酸鹼值。\n2.本注射液為鹼性，勿與高度酸性液混合。\n3.若注射液變黃，勿再使用。\n4.本藥之注射劑以靜脈注射比肌肉注射為好，但靜脈注射宜緩慢進行。\n5.不超過4mg/min速率",warning:["無尿症禁用","肝昏迷禁用","脫水禁用","懷孕早期禁用","嬰孩禁用"],lowDoseConc:"1mg/0.1ml"},
+  {category:"心血管藥物",name:"Calglon 10% 10mL/Amp",risk:"medium",indication:"骨形成不全、出血、血清病、氣管支氣喘痙攣性因素、皮膚疾患",adr:["高血鈣"],dose:"1.注射用藥。\n2.避免混合Ceftriaxone。\n3.與酒精混合會沉澱",warning:["腎功能不全的低鈣血症患者","正服用毛地黃配醣體的患者","甲狀腺機能亢進者應小心使用"],lowDoseConc:"1ml/0.1Amp"},
+  {category:"類固醇藥物",name:"Dexamethasone 5mg/1mL/Amp",risk:"medium",indication:"類風濕性關節炎、紅斑性狼瘡、皮膚炎、濕疹等",adr:["體液滯留","生長遲緩","高血壓"],dose:"1.肌肉及靜脈注射",warning:["糖尿病需調整用藥","有胃，十二指腸潰瘍之患者,使用時請特別注意"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"抗組織胺藥物",name:"Diphenhydramine 30mg/1ml/Amp",risk:"medium",indication:"過敏性疾患、蕁麻疹、皮膚炎、溼疹",adr:["嗜睡"],dose:"1.皮下、肌肉或靜脈注射",warning:["避免開車或操作機械"],lowDoseConc:"3mg/0.1ml"},
+  {category:"止吐藥物",name:"Droperidol 5mg/2mL/Amp",risk:"high",indication:"降低手術及診斷程序造成之噁心、嘔吐",adr:["幻覺","靜坐不能","體溫過高","心跳過速","低血壓"],dose:"靜脈或肌肉注射",warning:["QT延長風險","昏迷病人或Parkinson症患者禁用"],lowDoseConc:"0.25mg/0.1ml"},
+  {category:"鎮靜藥物",name:"Midatin 15mg/3mL/Amp",risk:"medium",indication:"鎮靜",adr:["呼吸抑制"],dose:"依醫囑",warning:["避免過量"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"鎮靜藥物",name:"Diazepam 10mg/2mL/Amp",risk:"high",indication:"焦慮、鎮靜、肌肉痙攣、癲癇發作控制、術前鎮靜",adr:["呼吸抑制","嗜睡","低血壓","頭暈","肌肉無力"],dose:"1.靜脈或肌肉注射。\n2.應緩慢靜脈注射以避免呼吸抑制及低血壓。",warning:["可能造成呼吸抑制，特別是與其他鎮靜藥或酒精併用時。","老年人較易發生過度鎮靜及跌倒風險。","避免快速靜脈注射（可能引起呼吸停止）。","長期使用可能產生依賴性與戒斷症狀。"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"類固醇藥物",name:"HydroCortisone 100mg/Vial",risk:"high",indication:"休克,嚴重過敏性疾患",adr:["浮腫","血壓上升"],dose:"1.配製：將2 mL無菌注射用水或生理食鹽水加入瓶中溶解乾粉。\n2.靜脈輸注：將配製好的溶液加入100-1000 mL D5W, D10W, D5LR, D5NS, NS, 1/2NS中輸注。\n3.靜脈或肌肉注射：配製後不須再稀釋，即可注射。如需少量藥液投予，可將100-3000 mg Hydrocortisone加入50 mL上述之稀釋液中進行注射。",warning:["大劑量注射可能會造成血壓升高、鹽及水分滯留並增加鉀的排泄。可能需限制鈉的攝取並補充鉀。"],lowDoseConc:"粉劑需配製,無固定濃度(請人工確認)"},
+  {category:"止痛藥物",name:"Ketorolac 30mg/1ml/Amp",risk:"high",indication:"短期（≦5天）使⽤於緩解無法⼝服病⼈之中重度急性疼痛，通常使⽤於⼿術後",adr:["胃腸潰瘍出血及穿孔","手術後出血","急性腎衰竭","肝衰竭"],dose:"1.靜脈或肌肉注射投與，靜脈注射時間不得低於15秒，肌肉注射應採緩慢及深部投與。\n2.適用於短暫（最多五天）中等急性疼痛治療。",warning:["長期使用可能會增加胃潰瘍、腸胃出血或穿孔的危險性。","嚴重腎功能不全患者禁用。","會抑制血小板功能，出血病人或有出血傾向的病人禁用。","不宜與Furosemide、Probenecid、Methotrexate等藥物併用。","孕婦或哺乳婦女禁用。","可能會引起體液滯留，心臟病及高血壓患者應謹慎使用。"],lowDoseConc:"3mg/0.1ml"},
+  {category:"心血管藥物",name:"Labetalol 25mg/5ml/Amp",risk:"high",indication:"高血壓",adr:["低血壓","眩暈","嘔吐"],dose:"靜脈注射使用。",warning:["注射液禁忌使用於第二或第三期的心臟傳導阻斷(有放置心律調節器在原位者除外)、心臟休克以及其他伴有嚴重及持續低血壓或嚴重心動徐緩狀況的病人.","有氣喘或障礙性呼吸道病史者不宜使用本藥。"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"心血管藥物",name:"Nicardipine 10mg/10mL/Amp",risk:"high",indication:"高血壓急症、術中或術後血壓控制",adr:["低血壓","頭痛","心悸","潮紅","噁心","靜脈炎"],dose:"1.靜脈滴注使用，需使用輸液幫浦控制速率。\n2.通常由低劑量開始，依血壓反應逐步調整。",warning:["可能造成顯著低血壓，需密切監測血壓變化。","避免快速推注（IV bolus）。","肝功能不全患者需謹慎使用。","與β-blocker併用時需注意心臟抑制作用。"],lowDoseConc:"0.1mg/0.1ml"},
+  {category:"心血管藥物",name:"Nitroglycerin 0.6mg/Tab/25t/Bot",risk:"high",indication:"心絞痛、急性冠心症、控制血壓、心衰竭",adr:["低血壓","頭痛","頭暈","臉潮紅","心跳加快"],dose:"1.舌下含服，發作時使用。\n2.可每5分鐘重複一次，最多3次。",warning:["可能導致顯著低血壓，使用後應避免突然站起。","不可與PDE-5抑制劑（如sildenafil）併用，可能造成危險性低血壓。","持續胸痛應立即就醫評估。","應避免暴露於高溫或光照以免藥效降低。"],lowDoseConc:"錠劑,不適用ml換算"},
+  {category:"心血管藥物",name:"MILLISROL Inj. 5mg/10mL/Amp",risk:"high",indication:"急性心衰竭、心絞痛、高血壓危象之血壓控制",adr:["低血壓","頭痛","頭暈","心跳加快","臉潮紅"],dose:"1.靜脈輸注使用，需使用NTG SET及輸液幫浦控制速率。\n2.依血壓及臨床反應調整劑量。",warning:["可能造成顯著低血壓，需密切監測血壓。","不可快速推注（IV bolus）。","避免與PDE-5抑制劑併用（可能引發危險性低血壓）。","長時間使用可能產生耐受性。"],lowDoseConc:"0.5mg/1ml"},
+  {category:"心血管藥物",name:"Magnesium sulfate 10% 20mL/Amp",risk:"high",indication:"體內鎂離子缺乏時之補充",adr:["休克","心搏過慢","血壓降低","眩暈","嗜睡","嘔吐"],dose:"電解質注射液，請注意使用濃度及劑量。",warning:["硫酸鎂中毒時常引起呼吸停止，應隨時注意血中濃度並給予鈣劑注射解毒。"],lowDoseConc:"10mg/0.1ml"},
+  {category:"止吐藥物",name:"Metoclopramide 10mg/2ml/amp",risk:"medium",indication:"預防嘔吐、逆流性消化性食道炎，糖尿病引起之胃腸蠕動異常",adr:["遲發性運動障礙（tardive dyskinesia）","錐體外路徑反應(extrapyramidal reactions)"],dose:"肌肉或靜脈注射。可用輸注液：D5W, D10W, D5NS, NS.",warning:["注射液在使用後，極少數兒童發生嗜睡或輕微肌肉緊張，此種現象為暫時性，停止用藥，保持安靜，症狀即會消失。"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"止吐藥物",name:"Prochlorperazine 5mg/1mL/Amp",risk:"medium",indication:"治療噁心、嘔吐、暈眩（特別是術後或藥物引起）",adr:["嗜睡","頭暈","口乾","低血壓","錐體外症狀（肌張力異常、顫抖）"],dose:"1.靜脈或肌肉注射。\n2.依醫囑給藥，需緩慢注射以減少低血壓風險。",warning:["可能引起錐體外症狀，特別是年輕患者或高劑量時。","老年患者較易出現鎮靜與姿勢性低血壓。","Parkinson病患應避免使用（可能惡化症狀）。","使用後應避免駕駛或操作機械。"],lowDoseConc:"0.5mg/0.1ml"},
+  {category:"急救藥物",name:"Neostigmine 0.5mg/1mL/Amp",risk:"medium",indication:"肌無力、消化液分泌機能減退、排尿困難、腸管麻痺",adr:["噁心","下痢","強直","流口水"],dose:"Atropine應隨時準備在側，以做為膽鹼酯酶抑制劑的解毒劑。",warning:["小腸或泌尿道阻塞、局結腸、腹膜炎、急性消化性潰瘍和甲狀腺亢進。"],lowDoseConc:"0.05mg/0.1ml"},
+  {category:"心血管藥物",name:"Lidocaine 100mg/5mL/Amp",risk:"high",indication:"心室性不整律之急性治療、局部麻醉",adr:["眩暈","嗜睡"],dose:"靜脈一次給藥法\n成人一次50~100mg (1-2mg/kg) (2%注射液2.5~5ml)以1~2 分鐘的時間，緩慢地靜脈注射。",warning:["有嚴重刺激傳導障礙(完全房室阻斷等)的患者(會有引起心跳停止之虞)"],lowDoseConc:"20mg/1ml"},
+  {category:"心血管藥物",name:"Cordarone 150mg/3mL/Amp",risk:"high",indication:"心室性心律不整（VT/VF）、心房顫動、其他嚴重心律不整",adr:["低血壓","心搏過慢","心律不整","噁心","肝功能異常","靜脈炎"],dose:"1.靜脈注射或輸注使用。\n2.依心律狀況及臨床反應調整劑量。\n3.稀釋液只能使用等張葡萄糖溶液，如：5%葡萄糖溶液(D5W)。",warning:["給藥時需持續心電圖監測。","可能造成低血壓或心搏過慢。","長期使用可能影響肺、肝及甲狀腺功能。","避免快速靜脈推注（可能引起血壓下降）。"],lowDoseConc:"50mg/1ml"},
+  {category:"呼吸道藥物",name:"Salbutamol 5mg/2.5mL/Amp",risk:"medium",indication:"支氣管氣喘、支氣管痙攣、COPD急性發作",adr:["心悸","顫抖","低血鉀","頭痛","焦躁"],dose:"1.霧化吸入（nebulization）使用。\n2.可依病況重複給藥。",warning:["可能引起心跳加快及心悸，心臟病患者需謹慎使用。","可能造成低血鉀，尤其大量或重複使用時。","使用後若症狀未改善或惡化應立即評估。","避免過量使用以免產生心血管副作用。"],lowDoseConc:"1mg/0.5ml"},
+  {category:"利尿劑",name:"Mannitol 20% 100mL/BT",risk:"high",indication:"降低顱內壓、腦水腫、急性青光眼、促進利尿",adr:["低血壓","電解質不平衡","脫水","頭痛","噁心","腎功能惡化"],dose:"1.靜脈輸注使用，依醫囑調整劑量及速率。\n2.使用前應確認無結晶，必要時溫溶後使用。",warning:["使用時需監測血壓、尿量及電解質。","腎功能不全或無尿患者應避免使用。","可能導致體液與電解質失衡。","快速輸注可能引起低血壓或肺水腫。"],lowDoseConc:"10ml/0.1BT"},
+  {category:"止痛藥物",name:"Nalbuphine 10mg/1ml/Amp",risk:"medium",indication:"解除中度到嚴重疼痛,麻醉補助劑",adr:["鎮靜","出汗","嘔吐","噁心","頭暈","眩暈","頭痛"],dose:"皮下、肌肉或靜脈注射。",warning:["長期使用後突然停藥可能引起戒斷症狀，如腹部痙攣、噁心、嘔吐、流淚、鼻溢、憂鬱、不安、體溫昇高或毛豎起。","具有鎮靜作用，開車或操作器械應小心。"],lowDoseConc:"1mg/0.1ml"}
+];
+
+function loadTbDrugs(){
+  let saved = localStorage.getItem(TB_STORAGE_KEY);
+  if(saved){
+    try{ return JSON.parse(saved); }catch(e){}
+  }
+  saveTbDrugsToStorage(defaultTbDrugs);
+  return JSON.parse(JSON.stringify(defaultTbDrugs));
+}
+
+function saveTbDrugsToStorage(data){
+  localStorage.setItem(TB_STORAGE_KEY, JSON.stringify(data));
+}
+
+let tbDrugs = loadTbDrugs();
+let currentCategory = "全部";
+let currentRisk = "all";
+
+function safeRisk(r){ return (r === "high") ? "high" : "medium"; }
+
+function renderToolboxFront(){
+  let keyword = document.getElementById("searchToolbox").value.toLowerCase();
+  let html = "";
+  let count = 0;
+
+  tbDrugs.forEach((d, i)=>{
+    if(currentCategory !== "全部" && d.category !== currentCategory) return;
+    if(currentRisk !== "all" && d.risk !== currentRisk) return;
+
+    let fullText = (d.name + d.indication + d.adr.join(" ") + d.dose + d.warning.join(" ")).toLowerCase();
+    if(keyword && !fullText.includes(keyword)) return;
+
+    count++;
+    let lowDoseClass = (d.lowDoseConc && (d.lowDoseConc.includes('無法換算') || d.lowDoseConc.includes('不適用') || d.lowDoseConc.includes('無固定濃度'))) ? 'lowdose-na' : '';
+    let risk = safeRisk(d.risk);
+
+    html += `
+    <div class="card drug-card risk-${risk}">
+      <div class="drug-card-header">
+        <span class="drug-name">${escapeHtml(d.name)}</span>
+        <span class="category-tag">${escapeHtml(d.category)}</span>
+        <span class="tag risk-${risk}">${risk === "high" ? "🚨 高風險" : "⚠ 注意"}</span>
+      </div>
+
+      <div class="lowdose-box">
+        <b>低劑量濃度(不稀釋)：</b>
+        <span class="${lowDoseClass}">${d.lowDoseConc ? escapeHtml(d.lowDoseConc) : '未提供'}</span>
+      </div>
+
+      <p style="margin:6px 0;"><b>適應症：</b>${escapeHtml(d.indication)}</p>
+
+      <p style="background:#fff1f0;padding:8px 12px;border-radius:8px;margin:6px 0;">
+        <b style="color:#cf1322;">副作用：</b>
+        <span style="color:#cf1322;">${d.adr.map(escapeHtml).join("、")}</span>
+      </p>
+
+      <p class="dose-text" style="margin:6px 0;"><b>用藥：</b>${escapeHtml(d.dose)}</p>
+
+      <div class="toggle-btn" onclick="toggleTbWarn(${i}, this)">▶ 點擊展開注意事項</div>
+      <div id="tbWarn${i}" class="hidden warning-text">
+        ${d.warning.map(w=>`<p style="margin:4px 0;">⚠ ${escapeHtml(w)}</p>`).join("")}
+      </div>
+    </div>`;
+  });
+
+  if(count === 0){
+    html = `<div style="text-align:center;color:#8c8c8c;padding:40px 10px;">😶‍🌫️ 查無符合條件的藥物</div>`;
+  }
+  document.getElementById("drugListToolbox").innerHTML = html;
+}
+
+function toggleTbWarn(i, el){
+  let warn = document.getElementById("tbWarn" + i);
+  let isHidden = warn.classList.contains("hidden");
+  warn.classList.toggle("hidden");
+  if(isHidden){
+    el.innerHTML = "▼ 收起注意事項";
+    warn.scrollIntoView({behavior:"smooth", block:"center"});
+  } else {
+    el.innerHTML = "▶ 點擊展開注意事項";
+  }
+}
+
+function setCategory(cat){ currentCategory = cat; renderToolboxFront(); }
+function setRisk(r){ currentRisk = r; renderToolboxFront(); }
+
+function highlightFilter(el){
+  let parent = el.parentElement;
+  parent.querySelectorAll("button").forEach(btn=>btn.classList.remove("active"));
+  el.classList.add("active");
+}
+
+document.getElementById("searchToolbox").addEventListener("input", renderToolboxFront);
+
+/* TTS Speech */
+let cachedVoice = null;
+function pickVoice(){
+  let voices = speechSynthesis.getVoices();
+  cachedVoice = voices.find(v => /zh|Chinese/i.test(v.lang) && /female|女/i.test(v.name)) ||
+                voices.find(v => /zh-TW|zh_TW/i.test(v.lang)) ||
+                voices.find(v => /zh/i.test(v.lang)) || null;
+}
+if(typeof speechSynthesis !== "undefined"){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function speakText(text){
+  if(speechSynthesis.speaking) speechSynthesis.cancel();
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-TW";
+  if(cachedVoice) u.voice = cachedVoice;
+  u.pitch = 1.3; u.rate = 1.05; u.volume = 1;
+  speechSynthesis.speak(u);
+}
+document.addEventListener("click", e=>{
+  let nameEl = e.target.closest(".drug-name");
+  if(nameEl){
+    let card = nameEl.closest(".drug-card");
+    let indication = card.querySelector("p").innerText;
+    speakText(nameEl.innerText + "。" + indication);
+  }
+});
+
+/* Toolbox Admin Auth & Functions */
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+async function doTbAdminLogin(){
+  const errEl = document.getElementById("tbAdminErr");
+  const now = Date.now();
+  if(now < tbLockUntil){
+    let secs = Math.ceil((tbLockUntil - now)/1000);
+    errEl.textContent = `嘗試次數過多，請於 ${secs} 秒後再試`;
+    return;
+  }
+  let val = document.getElementById("tbAdminPwd").value.trim();
+  let hash;
+  try { hash = await sha256Hex(val); } catch(e){ errEl.textContent = "驗證失敗，請確認環境 (需 HTTPS/localhost)"; return; }
+
+  if(hash === ADMIN_PWD_HASH){
+    tbFailCount = 0;
+    tbAdminUnlocked = true;
+    document.getElementById("tbAdminGate").classList.add("hidden");
+    document.getElementById("tbAdminContent").classList.remove("hidden");
+    document.getElementById("tbAdminPwd").value = "";
+    errEl.textContent = "";
+    renderTbAdmin();
+  } else {
+    tbFailCount++;
+    if(tbFailCount >= 5){
+      tbLockUntil = Date.now() + 30000;
+      tbFailCount = 0;
+      errEl.textContent = "嘗試次數過多，請於 30 秒後再試";
+    } else {
+      errEl.textContent = `密碼錯誤（剩餘 ${5 - tbFailCount} 次嘗試）`;
+    }
+  }
+}
+
+function lockTbAdmin(){
+  tbAdminUnlocked = false;
+  document.getElementById("tbAdminContent").classList.add("hidden");
+  document.getElementById("tbAdminGate").classList.remove("hidden");
+  showToast("🔒 後台已鎖定");
+}
+
+function renderTbAdmin(){
+  let html = "";
+  tbDrugs.forEach((d, i)=>{
+    let risk = safeRisk(d.risk);
+    let indShort = d.indication.length > 40 ? d.indication.substring(0,40)+"…" : d.indication;
+    html += `<tr>
+      <td style="word-break:break-all;">${escapeHtml(d.name)}</td>
+      <td>${escapeHtml(d.category)}</td>
+      <td><span class="tag risk-${risk}">${risk === "high" ? "🚨 高風險" : "⚠ 注意"}</span></td>
+      <td>${escapeHtml(indShort)}</td>
+      <td>${escapeHtml(d.lowDoseConc || "—")}</td>
+      <td style="white-space:nowrap;">
+        <button class="act-btn edit" onclick="openEditModalTB(${i})">✏ 編輯</button>
+        <button class="act-btn del" onclick="deleteTbDrug(${i})">✕ 刪除</button>
+      </td>
+    </tr>`;
+  });
+  document.getElementById("tbAdminBody").innerHTML = html;
+  document.getElementById("tbAdminCount").textContent = tbDrugs.length;
+}
+
+let editTbIndex = -1;
+function openAddModalTB(){
+  editTbIndex = -1;
+  document.getElementById("tbModalTitle").textContent = "新增藥物";
+  document.getElementById("fName").value = "";
+  document.getElementById("fCategory").value = "止痛藥物";
+  document.getElementById("fRisk").value = "high";
+  document.getElementById("fIndication").value = "";
+  document.getElementById("fAdr").value = "";
+  document.getElementById("fDose").value = "";
+  document.getElementById("fWarning").value = "";
+  document.getElementById("fLowDose").value = "";
+  document.getElementById("tbModalOverlay").classList.add("show");
+}
+
+function openEditModalTB(idx){
+  editTbIndex = idx;
+  let d = tbDrugs[idx];
+  document.getElementById("tbModalTitle").textContent = "編輯藥物";
+  document.getElementById("fName").value = d.name;
+  document.getElementById("fCategory").value = d.category;
+  document.getElementById("fRisk").value = d.risk;
+  document.getElementById("fIndication").value = d.indication;
+  document.getElementById("fAdr").value = d.adr.join("\n");
+  document.getElementById("fDose").value = d.dose;
+  document.getElementById("fWarning").value = d.warning.join("\n");
+  document.getElementById("fLowDose").value = d.lowDoseConc || "";
+  document.getElementById("tbModalOverlay").classList.add("show");
+}
+
+function closeTbModal(){ document.getElementById("tbModalOverlay").classList.remove("show"); }
+
+function saveTbDrug(){
+  let name = document.getElementById("fName").value.trim();
+  if(!name){ showToast("請輸入藥物名稱"); return; }
+  let obj = {
+    name: name,
+    category: document.getElementById("fCategory").value,
+    risk: document.getElementById("fRisk").value,
+    indication: document.getElementById("fIndication").value.trim(),
+    adr: document.getElementById("fAdr").value.trim().split("\n").map(s=>s.trim()).filter(Boolean),
+    dose: document.getElementById("fDose").value.trim(),
+    warning: document.getElementById("fWarning").value.trim().split("\n").map(s=>s.trim()).filter(Boolean),
+    lowDoseConc: document.getElementById("fLowDose").value.trim() || ""
+  };
+
+  if(editTbIndex >= 0) tbDrugs[editTbIndex] = obj;
+  else tbDrugs.push(obj);
+
+  saveTbDrugsToStorage(tbDrugs);
+  closeTbModal();
+  renderTbAdmin();
+  renderToolboxFront();
+  showToast("✅ 藥物資料已儲存");
+}
+
+function deleteTbDrug(idx){
+  if(!confirm(`確定要刪除「${tbDrugs[idx].name}」嗎？`)) return;
+  tbDrugs.splice(idx, 1);
+  saveTbDrugsToStorage(tbDrugs);
+  renderTbAdmin();
+  renderToolboxFront();
+  showToast("🗑 藥物已刪除");
+}
+
+function resetDefaultsTB(){
+  if(!confirm("確定要重置為預設藥物清單嗎？")) return;
+  tbDrugs = JSON.parse(JSON.stringify(defaultTbDrugs));
+  saveTbDrugsToStorage(tbDrugs);
+  renderTbAdmin();
+  renderToolboxFront();
+  showToast("🔄 已重置為預設藥物");
+}
+
+function exportBackupTB(){
+  let blob = new Blob([JSON.stringify(tbDrugs, null, 2)], {type:"application/json"});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = `藥物工具箱備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("📥 備份已下載");
+}
+
+function importBackupTB(e){
+  let file = e.target.files[0];
+  if(!file) return;
+  let reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      let data = JSON.parse(evt.target.result);
+      if(!Array.isArray(data) || !data.every(d => d.name && d.category)) throw new Error();
+      if(!confirm(`即將匯入 ${data.length} 筆藥物資料，確定繼續？`)) return;
+      tbDrugs = data;
+      saveTbDrugsToStorage(tbDrugs);
+      renderTbAdmin();
+      renderToolboxFront();
+      showToast(`✅ 已匯入 ${data.length} 筆藥物`);
+    }catch(err){ showToast("❌ 檔案解析失敗"); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+/* =========================================================
+   3. DOSE CALC MODULE (藥物劑量換算)
+   ========================================================= */
+const CALC_STORAGE_KEY = 'pacu_dose_calc_drugs_v1';
+const CALC_BACKUP_KEY = 'pacu_dose_calc_drugs_autobackup_v1';
+let calcAdminUnlocked = false;
+let detailOpen = false;
+
+const DEFAULT_CALC_DRUGS = [
+  { id:'fentanyl', label:'⚠ (管) Fentanyl (100 mcg / 2 mL / amp)', type:'mcg', ctrl:true, special:'fentanyl', strength:50, base:5, lowth:5, totalml:2, totalamount:100, amountunit:'mcg' },
+  { id:'meperidine', label:'⚠ (管) Meperidine (50 mg / 1 mL / amp)', type:'mg', ctrl:true, special:'meperidine', strength:50, base:5, lowth:5, totalml:1, totalamount:50, amountunit:'mg' },
+  { id:'morphine', label:'⚠ (管) Morphine (10 mg / 1 mL / amp)', type:'mg', ctrl:true, special:'morphine', strength:10, base:1, lowth:5, totalml:1, totalamount:10, amountunit:'mg' },
+  { id:'propofol', label:'⚠ (管) Propofol (200 mg / 20 mL / amp)', type:'mg', ctrl:true, special:'propofol', strength:10, base:1, lowth:5, totalml:20, totalamount:200, amountunit:'mg' },
+  { id:'midazolam', label:'⚠ (管) Midatin (15 mg / 3 mL / amp)', type:'mg', ctrl:true, strength:5, totalml:3, totalamount:15, amountunit:'mg' },
+  { id:'norepinephrine', label:'Norepinephrine (4 mg / 4 mL / amp)', type:'mcg', special:'norepinephrine', strength:1000, base:100, lowth:200, totalml:4, totalamount:4000, amountunit:'mcg' },
+  { id:'atropine', label:'Atropine (1 mg / 1 mL / amp)', type:'mg', strength:1, totalml:1, totalamount:1, amountunit:'mg' },
+  { id:'calcium_gluconate', label:'Calcium gluconate (1 g / 10 mL / amp)', type:'amp', ampml:10, totalml:10, totalamount:1, amountunit:'g' },
+  { id:'dexamethasone', label:'Dexamethasone (5 mg / 1 mL / amp)', type:'mg', strength:5, totalml:1, totalamount:5, amountunit:'mg' },
+  { id:'diphenhydramine', label:'Diphenhydramine (30 mg / 1 mL / amp)', type:'mg', strength:30, totalml:1, totalamount:30, amountunit:'mg' },
+  { id:'dopamine', label:'Dopamine (200 mg / 5 mL / Amp)', type:'mg', strength:40, totalml:5, totalamount:200, amountunit:'mg' },
+  { id:'droperidol', label:'Droperidol (5 mg / 2 mL / amp)', type:'mg', strength:2.5, totalml:2, totalamount:5, amountunit:'mg' },
+  { id:'epinephrine', label:'Epinephrine (1 mg / 1 mL / amp)', type:'mg', strength:1, totalml:1, totalamount:1, amountunit:'mg' },
+  { id:'ephedrine', label:'Ephedrine (40 mg / 1 mL / amp)', type:'mg', strength:40, totalml:1, totalamount:40, amountunit:'mg' },
+  { id:'furosemide', label:'Furosemide (20 mg / 2 mL / amp)', type:'mg', strength:10, totalml:2, totalamount:20, amountunit:'mg' },
+  { id:'glucose50', label:'Glucose 50% (20 mL / amp)', type:'amp', ampml:20, totalml:20 },
+  { id:'heparin', label:'Heparin (25,000 IU / 5 mL)', type:'IU', strength:5000, totalml:5, totalamount:25000, amountunit:'IU' },
+  { id:'ketorolac', label:'Ketorolac (30 mg / 1 mL)', type:'mg', strength:30, totalml:1, totalamount:30, amountunit:'mg' },
+  { id:'labetalol', label:'Labetalol (25 mg / 5 mL / Amp)', type:'mg', strength:5, totalml:5, totalamount:25, amountunit:'mg' },
+  { id:'lidocaine', label:'Lidocaine (100 mg / 5 mL / Amp)', type:'mg', strength:20, totalml:5, totalamount:100, amountunit:'mg' },
+  { id:'magnesium_sulfate', label:'Magnesium sulfate (20 mL / amp)', type:'amp', ampml:20, totalml:20 },
+  { id:'mannitol', label:'Mannitol (100 mL / bot)', type:'bot', botml:100, totalml:100 },
+  { id:'metoclopramide', label:'Metoclopramide (10 mg / 2 mL)', type:'mg', strength:5, totalml:2, totalamount:10, amountunit:'mg' },
+  { id:'nalbuphine', label:'Nalbuphine (10 mg / 1 mL)', type:'mg', strength:10, totalml:1, totalamount:10, amountunit:'mg' },
+  { id:'neostigmine', label:'Neostigmine (0.5 mg / 1 mL)', type:'mg', strength:0.5, totalml:1, totalamount:0.5, amountunit:'mg' },
+  { id:'nicardipine', label:'Nicardipine (10 mg / 10 mL / Amp)', type:'mg', strength:1, totalml:10, totalamount:10, amountunit:'mg' },
+  { id:'nitroglycerin', label:'Nitroglycerin (0.6 mg / tab , 25 tab / bot)', type:'tab', strength:0.6, totalamount:0.6, amountunit:'mg', packcount:25 },
+  { id:'prochlorperazine', label:'Prochlorperazine (5 mg / 1 mL / Amp)', type:'mg', strength:5, totalml:1, totalamount:5, amountunit:'mg' },
+  { id:'salbutamol', label:'Salbutamol (5 mg / 2.5 mL / Amp)', type:'mg', strength:2, totalml:2.5, totalamount:5, amountunit:'mg' },
+  { id:'sodium_bicarbonate', label:'Sodium Bicarbonate 7% (20 mL / Amp)', type:'amp', ampml:20, totalml:20 },
+  { id:'hydroxyethyl_starch', label:'Hydroxyethyl starch (500 mL / bot)', type:'bot', botml:500, totalml:500 }
+];
+
+function loadCalcDrugs(){
+  try{
+    const raw = localStorage.getItem(CALC_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_CALC_DRUGS));
+}
+
+function saveCalcDrugs(){
+  localStorage.setItem(CALC_STORAGE_KEY, JSON.stringify(calcDrugs));
+}
+
+let calcDrugs = loadCalcDrugs();
+
+function renderCalcSelect(){
+  const sel = document.getElementById("drugSelect");
+  sel.innerHTML = '<option value="">-- 請選擇藥物 --</option>';
+
+  let sorted = calcDrugs.slice().sort((a,b)=>{
+    if(a.ctrl && !b.ctrl) return -1;
+    if(!a.ctrl && b.ctrl) return 1;
+    return a.label.localeCompare(b.label, 'en');
+  });
+
+  let ctrlGroup = sorted.filter(d=>d.ctrl);
+  let genGroup = sorted.filter(d=>!d.ctrl);
+
+  function createOpt(d){
+    let opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.label;
+    if(d.ctrl) opt.className = 'ctrl';
+    Object.keys(d).forEach(k => { if(k!=='id' && k!=='label') opt.dataset[k] = d[k]; });
+    return opt;
+  }
+
+  if(ctrlGroup.length){
+    let g = document.createElement("optgroup");
+    g.label = '── 管制藥品 ──';
+    ctrlGroup.forEach(d => g.appendChild(createOpt(d)));
+    sel.appendChild(g);
+  }
+  if(genGroup.length){
+    let g = document.createElement("optgroup");
+    g.label = '── 一般藥品 (A-Z) ──';
+    genGroup.forEach(d => g.appendChild(createOpt(d)));
+    sel.appendChild(g);
+  }
+  resetCalcForm();
+}
+
+function resetCalcForm(){
+  const opt = document.getElementById("drugSelect").selectedOptions[0];
+  const unitMap = { mg:'mg', mcg:'mcg', IU:'IU', amp:'Amp', bot:'bot', tab:'mg' };
+  const uEl = document.getElementById("doseUnit");
+  const dBox = document.getElementById("calcDetail");
+  const tBtn = document.getElementById("toggleDetailBtn");
+
+  if(!opt || !opt.dataset || !opt.dataset.type){
+    uEl.textContent = '';
+    dBox.classList.add("hidden");
+    dBox.innerHTML = '';
+    tBtn.classList.add("hidden");
+    detailOpen = false;
+  } else {
+    uEl.textContent = unitMap[opt.dataset.type] || '';
+    showCalcDrugDetail(opt);
+    tBtn.classList.remove("hidden");
+    if(detailOpen) dBox.classList.remove("hidden");
+    else dBox.classList.add("hidden");
+  }
+
+  document.getElementById("doseInput").value = '';
+  document.getElementById("resultLive").innerHTML = '';
+  document.getElementById("dilutionBlock").classList.add("hidden");
+}
+
+function toggleCalcDetail(){
+  detailOpen = !detailOpen;
+  const dBox = document.getElementById("calcDetail");
+  const tBtn = document.getElementById("toggleDetailBtn");
+  if(detailOpen){
+    dBox.classList.remove("hidden");
+    tBtn.innerHTML = '📦 收合藥物總量明細 ▲';
+  } else {
+    dBox.classList.add("hidden");
+    tBtn.innerHTML = '📦 顯示藥物總量明細 ▼';
+  }
+}
+
+function showCalcDrugDetail(opt){
+  const type = opt.dataset.type;
+  const unitMap = { mg:'mg', mcg:'mcg', IU:'IU', amp:'Amp', bot:'bot', tab:'tab' };
+  const unit = unitMap[type] || '';
+  const strength = parseFloat(opt.dataset.strength);
+  const ampml = parseFloat(opt.dataset.ampml);
+  const botml = parseFloat(opt.dataset.botml);
+  const totalml = parseFloat(opt.dataset.totalml);
+  const totalamount = parseFloat(opt.dataset.totalamount);
+  const amountunit = opt.dataset.amountunit || (type==='tab'?'mg':unit);
+  const base = parseFloat(opt.dataset.base);
+  const lowth = parseFloat(opt.dataset.lowth || '5');
+
+  let lines = [];
+  lines.push('<div class="title">📦 藥物總容量明細</div>');
+  lines.push('<div><strong>品項:</strong> ' + opt.textContent.trim() + '</div>');
+
+  if(['mg','mcg','IU'].includes(type)){
+    if(!isNaN(strength)) lines.push('<div><strong>濃度:</strong> ' + strength + ' ' + unit + '/mL</div>');
+    if(!isNaN(totalml) && !isNaN(totalamount)){
+      let dispAmt = totalamount, dispUnit = amountunit;
+      if(amountunit === 'mcg' && totalamount >= 1000){ dispAmt /= 1000; dispUnit = 'mg'; }
+      lines.push('<div><strong>包裝總量:</strong> ' + dispAmt + ' ' + dispUnit + ' / ' + totalml + ' mL</div>');
+    } else if(!isNaN(totalml)){
+      lines.push('<div><strong>包裝總量:</strong> ' + totalml + ' mL</div>');
+    }
+  }
+
+  if(type === 'amp'){
+    if(!isNaN(ampml)) lines.push('<div><strong>1 Amp =</strong> ' + ampml + ' mL</div>');
+    if(!isNaN(totalamount)) lines.push('<div><strong>每支含量:</strong> ' + totalamount + ' ' + amountunit + ' / Amp</div>');
+  }
+
+  if(type === 'bot' && !isNaN(botml)) lines.push('<div><strong>1 bot =</strong> ' + botml + ' mL</div>');
+
+  if(type === 'tab'){
+    if(!isNaN(strength)) lines.push('<div><strong>每顆含量:</strong> ' + strength + ' mg / tab</div>');
+    const pack = parseFloat(opt.dataset.packcount);
+    if(!isNaN(pack) && !isNaN(strength)){
+      lines.push('<div><strong>每瓶總量:</strong> ' + pack + ' tab / bot（' + (pack*strength).toFixed(1) + ' mg）</div>');
+    }
+  }
+
+  if(!isNaN(base)){
+    let dispBase = base, u = (type === 'mcg') ? 'mcg' : 'mg';
+    if(type === 'mcg' && base >= 100){ dispBase /= 1000; u = 'mg'; }
+    lines.push('<div><strong>低劑量稀釋基準:</strong> ' + dispBase + ' ' + u + ' / 0.1 mL（低於 ' + lowth + ' 觸發提示）</div>');
+  }
+
+  document.getElementById("calcDetail").innerHTML = lines.join('');
+}
+
+function doCalculate(silent = false){
+  const opt = document.getElementById("drugSelect").selectedOptions[0];
+  if(!opt || !opt.dataset || !opt.dataset.type){ if(!silent) alert('請先選藥'); return; }
+
+  const doseVal = parseFloat(document.getElementById("doseInput").value);
+  if(!doseVal || doseVal <= 0){ if(!silent) alert('請輸入正確劑量'); return; }
+
+  const type = opt.dataset.type;
+  const special = opt.dataset.special;
+  let ml = null, text = '';
+
+  const strength = parseFloat(opt.dataset.strength || '0');
+  const ampml = parseFloat(opt.dataset.ampml || '0');
+  const botml = parseFloat(opt.dataset.botml || '0');
+
+  if(['mg','mcg','IU'].includes(type)){
+    ml = doseVal / strength;
+    text = '👉 抽取 ' + ml.toFixed(2) + ' mL';
+  } else if(type === 'amp'){
+    ml = doseVal * ampml;
+    text = '👉 抽取 ' + ml.toFixed(1) + ' mL';
+  } else if(type === 'bot'){
+    ml = doseVal * botml;
+    text = '👉 抽取 ' + ml.toFixed(1) + ' mL';
+  } else if(type === 'tab'){
+    let tab = doseVal / strength;
+    text = '👉 給 ' + tab.toFixed(1) + ' 顆 (' + doseVal + ' mg)';
+  }
+
+  let warningText = '';
+  if(ml !== null && ml <= 0.1) warningText = '⚠ ≤0.1 mL 建議稀釋使用';
+  else if(ml !== null && ml < 1) warningText = '⚠ 抽取量 <1 mL 請注意';
+
+  let hintText = '';
+  const lowList = ['fentanyl','meperidine','morphine','propofol','norepinephrine'];
+  const lowth = parseFloat(opt.dataset.lowth || '5');
+
+  if(lowList.includes(special) && doseVal < lowth){
+    document.getElementById("dilutionBlock").classList.remove("hidden");
+    const finalVol = parseFloat(document.getElementById("dilutionSelect").value);
+    const base = parseFloat(opt.dataset.base || '5');
+    const push = (doseVal * finalVol) / base;
+
+    let hintBase = base, hintUnit = (type === 'mcg') ? 'mcg' : 'mg';
+    if(type === 'mcg' && base >= 100){ hintBase /= 1000; hintUnit = 'mg'; }
+    hintText = `💡 低劑量建議<br>抽 ${hintBase} ${hintUnit}/0.1mL → 稀釋 ${finalVol}mL → 推 ${push.toFixed(1)}mL`;
+  } else {
+    document.getElementById("dilutionBlock").classList.add("hidden");
+  }
+
+  const live = document.getElementById("resultLive");
+  live.innerHTML = '';
+  setTimeout(()=>{
+    let parts = [];
+    if(text) parts.push(`<div class="calc-result">${text}</div>`);
+    if(warningText) parts.push(`<div class="calc-warning">${warningText}</div>`);
+    if(hintText) parts.push(`<div class="calc-hint">${hintText}</div>`);
+    live.innerHTML = parts.join('');
+  }, 80);
+
+  showCalcDrugDetail(opt);
+}
+
+/* Calc Admin Auth & Crud */
+function doCalcAdminLogin(){
+  let val = document.getElementById("calcAdminPwd").value.trim();
+  if(val === "8888"){
+    calcAdminUnlocked = true;
+    document.getElementById("calcAdminGate").classList.add("hidden");
+    document.getElementById("calcAdminContent").classList.remove("hidden");
+    document.getElementById("calcAdminErr").textContent = "";
+    document.getElementById("calcAdminPwd").value = "";
+    renderCalcAdminList();
+  } else {
+    document.getElementById("calcAdminErr").textContent = "密碼錯誤（預設為 8888）";
+  }
+}
+
+function lockCalcAdmin(){
+  calcAdminUnlocked = false;
+  document.getElementById("calcAdminContent").classList.add("hidden");
+  document.getElementById("calcAdminGate").classList.remove("hidden");
+  showToast("🔒 後台已鎖定");
+}
+
+function renderCalcAdminList(){
+  let html = "";
+  calcDrugs.forEach((d, i)=>{
+    html += `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px;margin-bottom:8px;${d.ctrl?'border-left:5px solid #ff4d4f;':''}">
+      <div>
+        <div style="font-weight:bold;font-size:15px;">${escapeHtml(d.label)}</div>
+        <div style="font-size:12px;color:#666;">ID: ${escapeHtml(d.id)} | Type: ${escapeHtml(d.type)} ${d.ctrl?'| ⚠ 管制藥':''}</div>
+      </div>
+      <div>
+        <button class="act-btn edit" onclick="editCalcDrug(${i})">✏ 編輯</button>
+        <button class="act-btn del" onclick="deleteCalcDrug(${i})">✕ 刪除</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById("calcAdminList").innerHTML = html || '<div style="text-align:center;color:#888;">無資料</div>';
+}
+
+let editCalcIndex = -1;
+function openDrugFormCalc(idx = -1){
+  editCalcIndex = idx;
+  document.getElementById("calcFormTitle").textContent = (idx >= 0) ? "編輯換算藥物" : "新增換算藥物";
+
+  let d = (idx >= 0) ? calcDrugs[idx] : {};
+  document.getElementById("calcFormLabel").value = d.label || '';
+  document.getElementById("calcFormType").value = d.type || 'mg';
+  document.getElementById("calcFormSpecial").value = d.special || '';
+  document.getElementById("calcFormStrength").value = d.strength || '';
+  document.getElementById("calcFormAmountunit").value = d.amountunit || '';
+  document.getElementById("calcFormAmpml").value = d.ampml || '';
+  document.getElementById("calcFormBotml").value = d.botml || '';
+  document.getElementById("calcFormTotalml").value = d.totalml || '';
+  document.getElementById("calcFormTotalamount").value = d.totalamount || '';
+  document.getElementById("calcFormPackcount").value = d.packcount || '';
+  document.getElementById("calcFormBase").value = d.base || '';
+  document.getElementById("calcFormLowth").value = d.lowth || '';
+  document.getElementById("calcFormCtrl").checked = !!d.ctrl;
+
+  document.getElementById("calcFormModal").classList.add("show");
+}
+
+function closeCalcFormModal(){ document.getElementById("calcFormModal").classList.remove("show"); }
+
+function saveCalcDrugForm(){
+  let label = document.getElementById("calcFormLabel").value.trim();
+  if(!label){ showToast("請輸入藥品顯示文字"); return; }
+
+  let obj = {
+    id: (editCalcIndex >= 0) ? calcDrugs[editCalcIndex].id : 'drug_' + Date.now(),
+    label: label,
+    type: document.getElementById("calcFormType").value,
+    ctrl: document.getElementById("calcFormCtrl").checked
+  };
+
+  const fields = ['special','strength','amountunit','ampml','botml','totalml','totalamount','packcount','base','lowth'];
+  fields.forEach(f => {
+    let val = document.getElementById("calcForm" + f.charAt(0).toUpperCase() + f.slice(1)).value;
+    if(val !== '') obj[f] = isNaN(val) ? val : parseFloat(val);
+  });
+
+  if(editCalcIndex >= 0) calcDrugs[editCalcIndex] = obj;
+  else calcDrugs.push(obj);
+
+  saveCalcDrugs();
+  closeCalcFormModal();
+  renderCalcAdminList();
+  renderCalcSelect();
+  showToast("✅ 劑量換算藥物已儲存");
+}
+
+function editCalcDrug(idx){ openDrugFormCalc(idx); }
+
+function deleteCalcDrug(idx){
+  if(!confirm(`確定要刪除「${calcDrugs[idx].label}」嗎？`)) return;
+  autoBackupCalc();
+  calcDrugs.splice(idx, 1);
+  saveCalcDrugs();
+  renderCalcAdminList();
+  renderCalcSelect();
+  showToast("🗑 藥物已刪除");
+}
+
+function autoBackupCalc(){
+  localStorage.setItem(CALC_BACKUP_KEY, JSON.stringify({ savedAt: new Date().toISOString(), drugs: calcDrugs }));
+}
+
+function doBackupCalc(){
+  let blob = new Blob([JSON.stringify(calcDrugs, null, 2)], {type:"application/json"});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = `劑量換算備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("📥 備份已下載");
+}
+
+function doImportCalc(e){
+  let file = e.target.files[0];
+  if(!file) return;
+  let reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      let data = JSON.parse(evt.target.result);
+      if(!Array.isArray(data)) throw new Error();
+      if(!confirm(`即將匯入 ${data.length} 筆資料，將取代現有藥物。確定？`)) return;
+      autoBackupCalc();
+      calcDrugs = data;
+      saveCalcDrugs();
+      renderCalcAdminList();
+      renderCalcSelect();
+      showToast(`✅ 已成功匯入 ${data.length} 筆藥物`);
+    }catch(err){ showToast("❌ 檔案解析失敗"); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+function doResetDefaultCalc(){
+  if(!confirm("確定要重置為預設劑量換算清單嗎？")) return;
+  autoBackupCalc();
+  calcDrugs = JSON.parse(JSON.stringify(DEFAULT_CALC_DRUGS));
+  saveCalcDrugs();
+  renderCalcAdminList();
+  renderCalcSelect();
+  showToast("🔄 已重置為預設換算藥物");
+}
+
+function doRestoreBackupCalc(){
+  let raw = localStorage.getItem(CALC_BACKUP_KEY);
+  if(!raw){ showToast("目前沒有可復原的自動備份紀錄"); return; }
+  let parsed = JSON.parse(raw);
+  if(!confirm(`確定復原至 ${new Date(parsed.savedAt).toLocaleString()} 的自動備份？`)) return;
+  calcDrugs = parsed.drugs || [];
+  saveCalcDrugs();
+  renderCalcAdminList();
+  renderCalcSelect();
+  showToast("↩ 已復原自動備份");
+}
+
+/* Confirm modal helper */
+let confirmCallback = null;
+function showConfirm(msg, cb){
+  document.getElementById("confirmText").textContent = msg;
+  confirmCallback = cb;
+  document.getElementById("confirmModal").classList.add("show");
+}
+function confirmYes(){
+  if(confirmCallback) confirmCallback();
+  document.getElementById("confirmModal").classList.remove("show");
+}
+function confirmNo(){
+  document.getElementById("confirmModal").classList.remove("show");
+}
+
+/* Modal backdrop click closing */
+document.querySelectorAll(".modal-overlay").forEach(m => {
+  m.addEventListener("click", function(e){ if(e.target === this) this.classList.remove("show"); });
+});
+
+/* Init */
+window.onload = function(){
+  renderToolboxFront();
+  renderCalcSelect();
+};
+</script>
+</body>
+</html>
